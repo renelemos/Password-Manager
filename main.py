@@ -1,7 +1,9 @@
 from tkinter import *
 import winsound
 import threading
-
+from tkinter import messagebox
+from random import choice, randint, shuffle
+import pyperclip
 
 # ---------------------------- SOUND ------------------------------- #
 def play_sound():
@@ -9,11 +11,29 @@ def play_sound():
 
 def toggle_sound():
         if sound_var.get():
-            sound_thread = threading.Thread(target=play_sound)
-            sound_thread.start()
+            play_sound()
         else:
             winsound.PlaySound(None, winsound.SND_ASYNC)
 # ---------------------------- PASSWORD GENERATOR ------------------------------- #
+def generate_password():
+    
+    letters = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z']
+    numbers = ['0','1','2','3','4','5','6','7','8','9']
+    symbols = ['!', '#', '$', '%', '&', '(', ')', '*','+']
+    
+    password_list = []
+    
+    password_letters = [choice(letters) for _ in range (randint(8,10))]
+    password_symbols = [choice(symbols) for _ in range (randint(2,4))]
+    password_numbers = [choice(numbers) for _ in range (randint(2,4))]
+    
+    password_list = password_letters + password_symbols + password_numbers
+    shuffle(password_list)
+    
+    password = "".join(password_list)
+    password_entry.insert(0,password)
+    pyperclip.copy(password)
+    
 
 # ---------------------------- SAVE PASSWORD ------------------------------- #
 def save():
@@ -22,10 +42,17 @@ def save():
     email = email_entry.get()
     password = password_entry.get() 
     
-    with open("password_data.txt","a") as data_file:
-        data_file.write(f"{website} | {email} | {password}\n")
-        website_entry.delete(0,END)
-        password_entry.delete(0,END)
+    if len(website) == 0 or len(password) ==0:
+        messagebox.showinfo(title="Oops", message="Please make sure you haven't left any fields empty." )
+    else:
+        is_ok = messagebox.askokcancel(title=website, message=f"These are the details entered: \nEmail:{email} "
+                                                      f"\nPassword:{password} \n Is it ok to save?")
+        
+        if is_ok:
+            with open("password_data.txt","a") as data_file:
+                data_file.write(f"{website} | {email} | {password}\n")
+                website_entry.delete(0,END)
+                password_entry.delete(0,END)
         
         
 # ---------------------------- UI SETUP ------------------------------- #
@@ -63,7 +90,7 @@ password_entry = Entry(width=33)
 password_entry.grid(row=3,column=1)
 
 #Buttons
-generate_password_button = Button(text="Generate Password")
+generate_password_button = Button(text="Generate Password", command = generate_password)
 generate_password_button.grid(row=3,column=2, columnspan=1)
 add_button = Button(text="Add", width=44, command = save)
 add_button.grid(row=4, column=1, columnspan=2)
